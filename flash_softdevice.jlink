@@ -1,0 +1,4 @@
+loadfile ../nrf51_sdk/components/softdevice/s110/hex/s110_softdevice.hex
+r
+g
+exit

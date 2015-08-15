@@ -1,10 +1,10 @@
-PROJECT_NAME := ble_app_hrs_s110_pca10031
+PROJECT_NAME := rsvp_app
 
 export OUTPUT_FILENAME
 MAKEFILE_NAME := $(MAKEFILE_LIST)
 MAKEFILE_DIR := $(dir $(MAKEFILE_NAME) ) 
 
-SOFTDEVICE_PATH = ../s110_nrf51_8.0.0/s110_nrf51_8.0.0_softdevice.hex
+JLinkExe := ../jlink/JLinkExe -device nrf51422_xxaa -if swd -speed 4000
 NORDIC_SDK_PATH = ../nrf51_sdk
 TEMPLATE_PATH = $(NORDIC_SDK_PATH)/components/toolchain/gcc
 ifeq ($(OS),Windows_NT)
@@ -59,7 +59,7 @@ $(abspath $(NORDIC_SDK_PATH)/components/ble/ble_advertising/ble_advertising.c) \
 $(abspath $(NORDIC_SDK_PATH)/components/ble/ble_services/ble_bas/ble_bas.c) \
 $(abspath $(NORDIC_SDK_PATH)/components/ble/common/ble_conn_params.c) \
 $(abspath $(NORDIC_SDK_PATH)/components/ble/ble_services/ble_dis/ble_dis.c) \
-$(abspath $(NORDIC_SDK_PATH)/components/ble/ble_services/ble_hrs/ble_hrs.c) \
+$(abspath $(NORDIC_SDK_PATH)/components/ble/ble_services/ble_nus/ble_nus.c) \
 $(abspath $(NORDIC_SDK_PATH)/components/ble/common/ble_srv_common.c) \
 $(abspath $(NORDIC_SDK_PATH)/components/ble/device_manager/device_manager_peripheral.c) \
 $(abspath $(NORDIC_SDK_PATH)/components/toolchain/system_nrf51.c) \
@@ -93,7 +93,7 @@ INC_PATHS += -I$(abspath $(NORDIC_SDK_PATH)/components/ble/ble_advertising)
 INC_PATHS += -I$(abspath $(NORDIC_SDK_PATH)/components/libraries/trace)
 INC_PATHS += -I$(abspath $(NORDIC_SDK_PATH)/components/ble/ble_services/ble_bas)
 INC_PATHS += -I$(abspath $(NORDIC_SDK_PATH)/components/softdevice/common/softdevice_handler)
-INC_PATHS += -I$(abspath $(NORDIC_SDK_PATH)/components/ble/ble_services/ble_hrs)
+INC_PATHS += -I$(abspath $(NORDIC_SDK_PATH)/components/ble/ble_services/ble_nus)
 
 OBJECT_DIRECTORY = _build
 LISTING_DIRECTORY = $(OBJECT_DIRECTORY)
@@ -163,7 +163,7 @@ vpath %.s $(ASM_PATHS)
 OBJECTS = $(C_OBJECTS) $(ASM_OBJECTS)
 
 nrf51422_xxac_s110: OUTPUT_FILENAME := nrf51422_xxac_s110
-nrf51422_xxac_s110: LINKER_SCRIPT=ble_app_hrs_gcc_nrf51.ld
+nrf51422_xxac_s110: LINKER_SCRIPT=nrf51.ld
 nrf51422_xxac_s110: $(BUILD_DIRECTORIES) $(OBJECTS)
 	@echo Linking target: $(OUTPUT_FILENAME).out
 	$(NO_ECHO)$(CC) $(LDFLAGS) $(OBJECTS) $(LIBS) -o $(OUTPUT_BINARY_DIRECTORY)/$(OUTPUT_FILENAME).out
@@ -223,17 +223,11 @@ clean:
 cleanobj:
 	$(RM) $(BUILD_DIRECTORIES)/*.o
 
-jlink_flash_commands:
-	echo "loadfile $(OUTPUT_BINARY_DIRECTORY)/nrf51422_xxac_s110.hex\nr\ng\nexit\n" > $(OUTPUT_BINARY_DIRECTORY)/flash.jlink
-
-flash: nrf51422_xxac_s110 jlink_flash_commands
+flash: nrf51422_xxac_s110 
 	@echo Flashing: $(OUTPUT_BINARY_DIRECTORY)/nrf51422_xxac_s110.hex
-	JLinkExe $(OUTPUT_BINARY_DIRECTORY)/flash.jlink
+	$(JLinkExe) flash_app.jlink
 
 ## Flash softdevice
-jlink_flash_softdevice_commands:
-	echo "loadfile $(SOFTDEVICE_PATH)\nr\ng\nexit\n" > $(OUTPUT_BINARY_DIRECTORY)/flash.jlink
-
-flash_softdevice: jlink_flash_softdevice_commands
+flash_softdevice: 
 	@echo Flashing: s110 softdevice
-	JLinkExe $(OUTPUT_BINARY_DIRECTORY)/flash.jlink
+	$(JLinkExe) flash_softdevice.jlink
