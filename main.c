@@ -131,8 +131,24 @@ static void gap_params_init(void)
 /**@snippet [Handling the data received over BLE] */
 static void nus_data_handler(ble_nus_t * p_nus, uint8_t * p_data, uint16_t length)
 {
+  static uint8_t unknown_cmd[] = "Unknown command";
+  uint32_t err_code;
+  if (p_data[0] == 's') {
     memset(letterbox_data, 0, sizeof(letterbox_data));
-    memcpy(letterbox_data, p_data, length);
+    memcpy(letterbox_data, p_data+1, length-1);
+  } else if(p_data[0] == 'r') {
+    if(m_nus.is_notification_enabled) {
+      err_code = ble_nus_string_send(&m_nus, letterbox_data, strlen((char*)letterbox_data));
+      APP_ERROR_CHECK(err_code);
+    }
+  } else {
+    if(m_nus.is_notification_enabled) {
+      err_code = ble_nus_string_send(&m_nus, unknown_cmd, strlen((char*)unknown_cmd));
+      APP_ERROR_CHECK(err_code);
+      err_code = ble_nus_string_send(&m_nus, p_data, length);
+      APP_ERROR_CHECK(err_code);
+    }
+  }
 }
 /**@snippet [Handling the data received over BLE] */
 
@@ -263,7 +279,6 @@ static void on_adv_evt(ble_adv_evt_t ble_adv_evt)
 static void on_ble_evt(ble_evt_t * p_ble_evt)
 {
     uint32_t                         err_code;
-    ble_gatts_evt_write_t * p_evt_write = &p_ble_evt->evt.gatts_evt.params.write;
     
     switch (p_ble_evt->header.evt_id)
     {
@@ -289,15 +304,6 @@ static void on_ble_evt(ble_evt_t * p_ble_evt)
             // No system attributes have been stored.
             err_code = sd_ble_gatts_sys_attr_set(m_conn_handle, NULL, 0, 0);
             APP_ERROR_CHECK(err_code);
-            break;
-
-        case BLE_GATTS_EVT_WRITE:
-            if ((p_evt_write->handle == m_nus.rx_handles.cccd_handle)
-                && (p_evt_write->len == 2)) 
-            {
-                err_code = ble_nus_string_send(&m_nus, letterbox_data, strlen((char*)letterbox_data));
-                APP_ERROR_CHECK(err_code);
-            }
             break;
 
         default:

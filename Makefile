@@ -4,7 +4,7 @@ export OUTPUT_FILENAME
 MAKEFILE_NAME := $(MAKEFILE_LIST)
 MAKEFILE_DIR := $(dir $(MAKEFILE_NAME) ) 
 
-JLinkExe := ../jlink/JLinkExe -device nrf51422_xxaa -if swd -speed 4000
+JLinkExe := JLinkExe -device nrf51422_xxaa -if swd -speed 4000
 NORDIC_SDK_PATH = ../nrf51_sdk
 TEMPLATE_PATH = $(NORDIC_SDK_PATH)/components/toolchain/gcc
 ifeq ($(OS),Windows_NT)
@@ -116,6 +116,7 @@ CFLAGS += -mfloat-abi=soft
 # keep every function in separate section. This will allow linker to dump unused functions
 CFLAGS += -ffunction-sections -fdata-sections -fno-strict-aliasing
 CFLAGS += -fno-builtin --short-enums
+CFLAGS += -g
 
 # keep every function in separate section. This will allow linker to dump unused functions
 LDFLAGS += -Xlinker -Map=$(LISTING_DIRECTORY)/$(OUTPUT_FILENAME).map
